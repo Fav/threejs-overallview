@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - equirectangular panorama demo</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				background-color: #000000;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				position: absolute;
+				top: 0px; width: 100%;
+				color: #ffffff;
+				padding: 5px;
+				font-family:Monospace;
+				font-size:13px;
+				font-weight: bold;
+				text-align:center;
+			}
+
+			a {
+				color: #ffffff;
+			}
+			.navigate{
+				position: absolute;
+				bottom: 0px; width: 100%;height:300px;
+			}
+			.navigate #places{
+				width:100%;
+				height:200px;
+				background:rgba(64, 64, 64, 0.5);
+			}
+			.navigate #places img{
+				margin-top:36px;
+				width:256px;
+				height:128px;
+			}
+			.location{
+				cursor:pointer;
+				position:absolute;
+				top:15px;
+				left:15px;
+				color:white;
+				background:rgba(64, 64, 64, 0.5);
+			}
+			.location *{
+				vertical-align:middle;
+			}
+			.navigate #tools{
+				cursor:arrow;
+				margin: 20px auto;
+				width:300px;
+			}
+			.navigate #tools img{
+				margin:0 4px;
+				cursor:pointer;
+			}
+			.navigate #toolPanel{
+				position:absolute;
+				top:200px;
+				left:0;
+				width:100%;
+			}
+			#mapcontain{
+				width:210px;
+				height:180px;
+				position:absolute;
+				right:0;
+				top:0;
+				background:rgba(64, 64, 64, 0.2);
+			}
+			#mapcontain div{
+				background:rgba(16, 16, 16, 0.2);
+				width:100%;
+				height:24px;
+			}
+			#mapcontain div img{
+				float:right;
+			}
+			#mapcontain div img,#showMap img{
+				width:24px;
+				height:24px;
+			}
+			#showMap{
+				position:absolute;
+				right:0;
+				top:0;
+				display:none;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="location">
+			<img src="textures/home.png" width="32px" height="32px"/>
+			您所在的位置:青铜馆
+		</div>
+		<div id="container"></div>
+		<div id="info"></div>
+		
+		<div id ="mapcontain">
+			<div><img src="textures/hide.png"> </div>
+			<img src= "textures/map.png">
+		</div>
+		
+		<div id="showMap"> 
+			<img src = "textures/show.png">
+		</div>
+	
+		<div class = "navigate">
+			<div id="places">
+				<img src='textures/2294472375_24a3b8ef46_o.jpg'></img>
+				<img src='textures/2294472375_24a3b8ef46_o-1.jpg'></img>
+			</div>
+			<div id = "toolPanel">
+			<div id="tools" >
+				<img id="001" src='textures/tool/001.png'></img>
+				<img id="002" src='textures/tool/002.png'></img>
+				<img id="003" src='textures/tool/003.png'></img>
+				<img id="004" src='textures/tool/004.png'></img>
+				<img id="005" src='textures/tool/005.png'></img>
+				<img id="006" src='textures/tool/006.png'></img>
+				<!--<img id="007" src='textures/tool/007.png'></img>-->
+			</div>
+			</div>
+		</div>
+		
+		<script src="build/three.min.js"></script>
+		<script src="js/jquery/jquery-1.12.1.js"></script>
+
+		<script>
+
+			var camera, scene, renderer;
+			
+			var isUserInteracting = false,
+			onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+			lon = 0, onMouseDownLon = 0,
+			lat = 0, onMouseDownLat = 0,
+			phi = 0, theta = 0;
+
+			init('textures/2294472375_24a3b8ef46_o-1.jpg');
+			animate();
+			var geometry;
+			
+			$(function(){
+				$('.navigate #places img').mouseenter(function(){
+					$(this).css("border","yellow 2px solid");
+				}).mouseleave (function(){
+					$(this).css("border","");
+				}).click(function(){
+					changePic($(this).attr("src"));
+				});
+				
+				//首页点击事件
+				$(".location").click(function(){
+					window.location.href='full.html';
+				});
+				
+				$(".navigate #tools img").click(function(){
+					var fov = camera.fov;
+					switch(this.id)
+					{
+						//隐藏图片导航
+						case "001":
+							$("#places").fadeToggle("slow","linear");
+							break;
+						case "002":
+							lon -= 2;
+							break;
+						case "003":
+							lon += 2;
+							break;	
+						case "004":
+							fov-=4;
+							dealZoom(fov);
+							break;
+						case "005":
+							fov+=4;
+							dealZoom(fov);
+							break;
+						default:
+							break;
+					}
+				});
+				
+				
+				$("#mapcontain div img").click(function(){
+					$("#mapcontain").fadeOut("slow");
+					$("#showMap").fadeIn("slow");
+				});
+				$("#showMap").click(function(){
+					$("#mapcontain").fadeIn("slow");
+					$("#showMap").fadeOut("slow");
+				});
+			});
+			
+			function init(url) {
+				var container, mesh;
+
+				container = document.getElementById( 'container' );
+
+				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.target = new THREE.Vector3( 0, 0, 0 );
+
+				scene = new THREE.Scene();
+
+				geometry = new THREE.SphereGeometry( 500, 60, 40 );
+				geometry.scale( - 1, 1, 1 );
+
+				var material = new THREE.MeshBasicMaterial( {
+					map: new THREE.TextureLoader().load( url )
+				} );
+
+				mesh = new THREE.Mesh( geometry, material );
+
+				scene.add( mesh );
+				
+				//添加定位
+				/*
+				var locategif = new THREE.PlaneGeometry(100,100);
+				var m1 = new THREE.MeshBasicMaterial({
+					color:red;
+				});
+				var mesh1= new THREE.Mesh(locategif,m1);
+				scene.add(mesh1);
+				*/
+
+				
+				
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				
+				container.appendChild( renderer.domElement );
+				
+				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+				document.addEventListener( 'mousewheel', onDocumentMouseWheel, false );
+				document.addEventListener( 'MozMousePixelScroll', onDocumentMouseWheel, false);
+				//
+
+				document.addEventListener( 'dragover', function ( event ) {
+					event.preventDefault();
+					event.dataTransfer.dropEffect = 'copy';
+				}, false );
+
+				document.addEventListener( 'dragenter', function ( event ) {
+					document.body.style.opacity = 0.5;
+				}, false );
+
+				document.addEventListener( 'dragleave', function ( event ) {
+					document.body.style.opacity = 1;
+				}, false );
+
+				document.addEventListener( 'drop', function ( event ) {
+					event.preventDefault();
+
+					var reader = new FileReader();
+					reader.addEventListener( 'load', function ( event ) {
+
+						material.map.image.src = event.target.result;
+						material.map.needsUpdate = true;
+
+					}, false );
+					reader.readAsDataURL( event.dataTransfer.files[ 0 ] );
+					document.body.style.opacity = 1;
+				}, false );
+				//
+				window.addEventListener( 'resize', onWindowResize, false );
+			}
+
+			function onWindowResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+
+			function onDocumentMouseDown( event ) {
+				event.preventDefault();
+
+				isUserInteracting = true;
+
+				onPointerDownPointerX = event.clientX;
+				onPointerDownPointerY = event.clientY;
+
+				onPointerDownLon = lon;
+				onPointerDownLat = lat;
+			}
+
+			function onDocumentMouseMove( event ) {
+				if ( isUserInteracting === true ) {
+					lon = ( onPointerDownPointerX - event.clientX ) * 0.1 + onPointerDownLon;
+					lat = ( event.clientY - onPointerDownPointerY ) * 0.1 + onPointerDownLat;
+				}
+			}
+
+			function onDocumentMouseUp( event ) {
+				isUserInteracting = false;
+			}
+
+			function onDocumentMouseWheel( event ) {
+				var fov = camera.fov;
+				// WebKit
+				if ( event.wheelDeltaY ) {
+
+					fov -= event.wheelDeltaY * 0.05;
+
+				// Opera / Explorer 9
+				} else if ( event.wheelDelta ) {
+
+					fov -= event.wheelDelta * 0.05;
+
+				// Firefox
+				} else if ( event.detail ) {
+
+					fov += event.detail * 0.05;
+
+				}
+				dealZoom(fov);
+			}
+			function dealZoom(fov){
+				fov = fov%365;
+				if(fov> 100 || fov <15){
+					return;
+				}
+				camera.fov = fov;
+				camera.updateProjectionMatrix();
+			}
+
+			function animate() {
+				requestAnimationFrame( animate );
+				update();
+			}
+
+			function update() {
+/*
+				if ( isUserInteracting === false ) {
+
+					lon += 0.1;
+
+				}
+*/
+				lat = Math.max( - 85, Math.min( 85, lat ) );
+				phi = THREE.Math.degToRad( 90 - lat );
+				theta = THREE.Math.degToRad( lon );
+
+				camera.target.x = 500 * Math.sin( phi ) * Math.cos( theta );
+				camera.target.y = 500 * Math.cos( phi );
+				camera.target.z = 500 * Math.sin( phi ) * Math.sin( theta );
+
+				camera.lookAt( camera.target );
+
+				/*
+				// distortion
+				camera.position.copy( camera.target ).negate();
+				*/
+
+				renderer.render( scene, camera );
+			}
+
+			function changePic(path){
+				var material = new THREE.MeshBasicMaterial( {
+					map: new THREE.TextureLoader().load( path)
+				} );
+				mesh = new THREE.Mesh( geometry, material );
+				scene.add( mesh );
+			}
+		</script>
+	</body>
+</html>

@@ -1,0 +1,255 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title></title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0px;
+            background-color: #000000;
+            overflow: hidden;
+        }
+		.bubble{
+			background: rgba(64,64,64,0.5);
+			color: #fff;
+			padding:10px;
+
+		}
+		#mesh222{
+			width:300px;
+			height:160px;
+			position:absolute;
+			top:100px;
+			left:190px;
+			display:none;			
+		}
+		#mesh111{
+			width:300px;
+			height:160px;
+			position:absolute;
+			top:400px;
+			left:600px;
+			display:none;			
+		}
+		#introduce{
+			width:300px;
+			height:300px;
+			position:absolute;
+			top:400px;
+			right:200px;
+		}
+		#introduce .title{
+			font-size:30px;
+			text-align:center;
+		}
+		#introduce #close{
+			width:32px;
+			height:28px;
+			position: absolute;
+			right:10px;
+			top:10px;
+			cursor:pointer;
+		}
+    </style>
+</head>
+<body>
+
+<script src="build/three.js"></script>
+<script src="js/jquery/jquery-1.12.1.js"></script>
+
+<script>
+
+    var camera, scene, renderer;
+    var mesh;
+	var mesh1,mesh2,pickingTexture;
+	var targetList = [];
+	var projector, mouse = { x: 10000, y: 10000 };
+	
+    init();
+    animate();
+
+	$(function(){
+		$("#close").click(function(){
+			$("#introduce").hide();
+		});
+	});
+	
+    function init() {
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        document.body.appendChild( renderer.domElement );
+        //
+        camera = new THREE.PerspectiveCamera( 110, window.innerWidth / window.innerHeight, 1, 1000 );
+        camera.position.x = 0;
+        camera.position.y = 0;
+        camera.position.z = 400;
+		camera.lookAt({
+			x : 0,
+			y : 0,
+			z : 0
+		});
+				
+				
+        scene = new THREE.Scene();
+		
+		pickingTexture = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight );
+		pickingTexture.texture.minFilter = THREE.LinearFilter;
+
+        var geometry = new THREE.PlaneGeometry( window.innerWidth , window.innerHeight, 1, 1 );
+
+        // 纹理坐标怎么弄
+        var texture = THREE.ImageUtils.loadTexture("textures/full.jpg",null,function(t){});
+        var material = new THREE.MeshBasicMaterial({map:texture});
+        var mesh = new THREE.Mesh( geometry,material );
+        scene.add( mesh );
+
+		//添加标志点
+		var geodw = new THREE.PlaneGeometry( 60 , 80, 1, 1 );
+		var texture1 = THREE.ImageUtils.loadTexture("textures/dw.png",null,function(t){});
+        var material1 = new THREE.MeshBasicMaterial({
+			map:texture1,
+			transparent:true
+		});
+        mesh1 = new THREE.Mesh( geodw,material1 );
+		mesh1.position.y = 10;
+		mesh1.name="mesh111";
+        scene.add( mesh1 );
+		targetList.push(mesh1);
+
+		var geodw1= new THREE.PlaneGeometry( 60 , 80, 1, 1 );
+		var texture12 = THREE.ImageUtils.loadTexture("textures/dw.png",null,function(t){});
+        var material2 = new THREE.MeshBasicMaterial({
+			map:texture12,
+			transparent:true
+		});
+		
+		mesh2 = new THREE.Mesh( geodw1,material2 );
+		mesh2.position.x = -500;
+		mesh2.position.y = 400;
+		mesh2.name="mesh222";
+        scene.add( mesh2 );
+		targetList.push(mesh2);
+        //
+        window.addEventListener( 'resize', onWindowResize, false );
+		//renderer.domElement.addEventListener( 'click', onClick );
+		projector = new THREE.Projector();
+		document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+		document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+		requestAnimationFrame(draw);
+    }
+	function onDocumentMouseMove( event ){
+		mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+		mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;	
+	}	
+	
+	function onDocumentMouseDown( event ){
+		// the following line would stop any other event handler from firing
+		// (such as the mouse's TrackballControls)
+		// event.preventDefault();
+		
+		console.log("Click.");
+		
+		// update the mouse variable
+		mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+		mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+		
+		// find intersections
+
+		// create a Ray with origin at the mouse position
+		//   and direction into the scene (camera direction)
+		var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
+		projector.unprojectVector( vector, camera );
+		var ray = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+		// create an array containing all objects in the scene with which the ray intersects
+		var intersects = ray.intersectObjects( targetList );
+		
+		// if there is one (or more) intersections
+		if ( intersects.length > 0 )
+		{
+			//alert(intersects[ 0 ].object.name);
+			if(intersects[ 0 ].object.name == "mesh111"){
+				window.location.href='1.html';
+			}if(intersects[ 0 ].object.name == "mesh222"){
+				
+			}
+			
+			//console.log("Hit @ " + toString( intersects[0].point ) );
+			// change the color of the closest face.
+			intersects[ 0 ].face.color.setRGB( 0.8 * Math.random() + 0.2, 0, 0 ); 
+			intersects[ 0 ].object.geometry.colorsNeedUpdate = true;
+		}
+
+	}
+
+	function onClick( e ) {
+		var x = e.clientX;
+		var y = e.clientY;
+		//create buffer for reading single pixel
+		var pixelBuffer = new Uint8Array( 4 );
+		renderer.readRenderTargetPixels(pickingTexture, x, pickingTexture.height - y, 1, 1, pixelBuffer);
+		var id = ( pixelBuffer[0] << 16 ) | ( pixelBuffer[1] << 8 ) | ( pixelBuffer[2] );
+		alert(id);
+	}
+	function draw() {
+		mesh1.position.y -= 0.3;
+		
+		if (mesh1.position.y <= 0) {
+			mesh1.position.y = 10;
+		}
+		
+		mesh2.position.y -= 0.3;
+		
+		if (mesh2.position.y <= 390) {
+			mesh2.position.y = 400;
+		}		
+		
+		
+		renderer.render(scene, camera);
+		requestAnimationFrame(draw);
+	}
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+    }
+    function animate() {
+		var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
+		projector.unprojectVector( vector, camera );
+		// update the picking ray with the camera and mouse position	
+		var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+		// calculate objects intersecting the picking ray
+		var intersects = raycaster.intersectObjects( targetList );
+
+		var i=0;
+		if(intersects.length>0){
+			for ( i = 0; i < intersects.length; i++ ) {
+				//alert(intersects[i].object.name);
+				intersects[i].object.material.color.set( 0xff0000 );
+				$("#"+intersects[i].object.name).show();
+			}
+		}else{
+			for ( i = 0; i < targetList.length; i++ ) {
+				//alert(intersects[ 0 ].object.name);
+				targetList[i].material.color.set( 0xffffff );
+				$("#"+targetList[i].name).hide();
+			}
+		}
+
+        requestAnimationFrame( animate );
+        renderer.render( scene, camera );
+    }
+
+</script>
+	<div class="bubble" id= "mesh222">出土的文物是宝贵的人类文化遗产，在中国的文物群体中，属最具历史、科学、文化、艺术价值和最富观赏性的文物群体之一。在这批古蜀秘宝中，有高2.62米的青铜大立人、有宽1.38米的青铜面具、更有高达3.95米的青铜神树等，均堪称独一无二的旷世神品。而以金杖为代表的金器，
+	</div>
+	<div class="bubble" id= "mesh111">三星堆古遗址位于四川省广汉市西北的鸭子河南岸，分布面积12平方千米，距今已有5000至3000年历史，是迄今在西南地区发现的范围最大、延续时间最长、文化内涵最丰富的古城
+	</div>
+	<div class="bubble" id="introduce">
+	<div class="title">三星堆博物馆</div>
+	<img src ="textures/close.png" id="close"/>
+<hr />	三星堆古遗址位于四川省广汉市西北的鸭子河南岸，分布面积12平方千米，距今已有5000至3000年历史，是迄今在西南地区发现的范围最大、延续时间最长、文化内涵最丰富的古城、古国、古蜀文化遗址。现有保存最完整的东、西、南城墙和月亮湾内城墙。三星堆遗址被称为20世纪人类最伟大的考古发现之一，昭示了长江流域与黄河流域一样，同属中华文明的母体，被誉为“长江文明之源”。
+	</div>
+</body>
+</html>
