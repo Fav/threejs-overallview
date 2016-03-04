@@ -135,7 +135,8 @@
 		<script>
 
 			var camera, scene, renderer;
-			
+			var mesh1,mouse = { x: 10000, y: 10000 };;
+			var targetList = [];
 			var isUserInteracting = false,
 			onMouseDownMouseX = 0, onMouseDownMouseY = 0,
 			lon = 0, onMouseDownLon = 0,
@@ -144,7 +145,7 @@
 
 			init('textures/2294472375_24a3b8ef46_o-1.jpg');
 			animate();
-			var geometry;
+			var geometry,projector;
 			
 			$(function(){
 				$('.navigate #places img').mouseenter(function(){
@@ -245,34 +246,35 @@
 				scene = new THREE.Scene();
 
 				geometry = new THREE.SphereGeometry( 500, 60, 40 );
-				geometry.scale( - 1, 1, 1 );
+				geometry.scale( -1, 1, 1 );
 
 				var material = new THREE.MeshBasicMaterial( {
 					map: new THREE.TextureLoader().load( url )
 				} );
 
 				mesh = new THREE.Mesh( geometry, material );
-
+//mesh.position.set(500,500,500);
 				scene.add( mesh );
 				
 				//添加定位
-				/*
-				var locategif = new THREE.PlaneGeometry(100,100);
+				var locategif = new THREE.PlaneGeometry( 15 , 20, 1, 1 );
+				var texture1 = THREE.ImageUtils.loadTexture("textures/dw.png",null,function(t){});
 				var m1 = new THREE.MeshBasicMaterial({
-					color:red;
+					map:texture1,
+					transparent:true
 				});
-				var mesh1= new THREE.Mesh(locategif,m1);
+				mesh1= new THREE.Mesh(locategif,m1);
+				mesh1.position.set(-185,-125,-250);
+				mesh1.name="mesh111";
 				scene.add(mesh1);
-				*/
-
-				
+				targetList.push(mesh1);
 				
 				renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				
 				container.appendChild( renderer.domElement );
-				
+				projector = new THREE.Projector();
 				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 				document.addEventListener( 'mouseup', onDocumentMouseUp, false );
@@ -316,7 +318,7 @@
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
 			}
-
+			var dir={"mesh111":"textures/2294472375_24a3b8ef46_o.jpg"}
 			function onDocumentMouseDown( event ) {
 				event.preventDefault();
 
@@ -327,6 +329,41 @@
 
 				onPointerDownLon = lon;
 				onPointerDownLat = lat;
+				
+				
+						console.log("Click.");
+		
+				// update the mouse variable
+				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+				
+				// find intersections
+
+				// create a Ray with origin at the mouse position
+				//   and direction into the scene (camera direction)
+				var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
+				projector.unprojectVector( vector, camera );
+				var ray = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+				// create an array containing all objects in the scene with which the ray intersects
+				var intersects = ray.intersectObjects( targetList );
+				
+				// if there is one (or more) intersections
+				if ( intersects.length > 0 )
+				{
+					//alert(intersects[ 0 ].object.name);
+					if(intersects[ 0 ].object.name == "mesh111"){
+						onDocumentMouseUp();
+						changePic(dir["mesh111"]);
+					}if(intersects[ 0 ].object.name == "mesh222"){
+						
+					}
+					
+					//console.log("Hit @ " + toString( intersects[0].point ) );
+					// change the color of the closest face.
+					intersects[ 0 ].face.color.setRGB( 0.8 * Math.random() + 0.2, 0, 0 ); 
+					intersects[ 0 ].object.geometry.colorsNeedUpdate = true;
+				}
 			}
 
 			function onDocumentMouseMove( event ) {
@@ -370,6 +407,12 @@
 			}
 
 			function animate() {
+				mesh1.position.y -= 0.3;
+		
+				if (mesh1.position.y <= -135) {
+					mesh1.position.y = -125;
+				}
+
 				requestAnimationFrame( animate );
 				update();
 			}
