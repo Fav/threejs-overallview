@@ -240,6 +240,7 @@
 
 				container = document.getElementById( 'container' );
 
+	
 				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
 				camera.target = new THREE.Vector3( 0, 0, 0 );
 
@@ -272,7 +273,7 @@
 				renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
-				
+
 				container.appendChild( renderer.domElement );
 				projector = new THREE.Projector();
 				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
@@ -300,10 +301,8 @@
 
 					var reader = new FileReader();
 					reader.addEventListener( 'load', function ( event ) {
-
 						material.map.image.src = event.target.result;
 						material.map.needsUpdate = true;
-
 					}, false );
 					reader.readAsDataURL( event.dataTransfer.files[ 0 ] );
 					document.body.style.opacity = 1;
@@ -331,7 +330,7 @@
 				onPointerDownLat = lat;
 				
 				
-						console.log("Click.");
+				console.log("Click.");
 		
 				// update the mouse variable
 				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
@@ -381,19 +380,13 @@
 				var fov = camera.fov;
 				// WebKit
 				if ( event.wheelDeltaY ) {
-
 					fov -= event.wheelDeltaY * 0.05;
-
 				// Opera / Explorer 9
 				} else if ( event.wheelDelta ) {
-
 					fov -= event.wheelDelta * 0.05;
-
 				// Firefox
 				} else if ( event.detail ) {
-
 					fov += event.detail * 0.05;
-
 				}
 				dealZoom(fov);
 			}
@@ -405,14 +398,17 @@
 				camera.fov = fov;
 				camera.updateProjectionMatrix();
 			}
-
+			var step = 0;	
 			function animate() {
+				step +=0.2;
+				mesh1.position.y = -125 + 5*Math.sin(step)
+				/*
 				mesh1.position.y -= 0.3;
 		
 				if (mesh1.position.y <= -135) {
 					mesh1.position.y = -125;
 				}
-
+				*/
 				requestAnimationFrame( animate );
 				update();
 			}
