@@ -12,7 +12,6 @@
 <script src="js/jquery/jquery-1.12.1.js"></script>
 
 <script>
-
     var camera, scene, renderer;
     var mesh;
 	var mesh1,mesh2,pickingTexture;
@@ -25,6 +24,11 @@
 	$(function(){
 		$("#close").click(function(){
 			$("#introduce").hide();
+			$("#intro-simple").show();
+		});
+		$("#intro-simple").click(function(){
+			$("#introduce").show();
+			$("#intro-simple").hide();
 		});
 	});
 	
@@ -43,45 +47,24 @@
 			z : 0
 		});
 				
-				
         scene = new THREE.Scene();
-		
 		pickingTexture = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight );
 		pickingTexture.texture.minFilter = THREE.LinearFilter;
 
+        // 底图
         var geometry = new THREE.PlaneGeometry( window.innerWidth , window.innerHeight, 1, 1 );
-
-        // 纹理坐标怎么弄
         var texture = THREE.ImageUtils.loadTexture("textures/full.jpg",null,function(t){});
         var material = new THREE.MeshBasicMaterial({map:texture});
         var mesh = new THREE.Mesh( geometry,material );
         scene.add( mesh );
 
 		//添加标志点
-		var geodw = new THREE.PlaneGeometry( 60 , 80, 1, 1 );
-		var texture1 = THREE.ImageUtils.loadTexture("textures/dw.png",null,function(t){});
-        var material1 = new THREE.MeshBasicMaterial({
-			map:texture1,
-			transparent:true
-		});
-        mesh1 = new THREE.Mesh( geodw,material1 );
-		mesh1.position.y = 10;
-		mesh1.name="mesh111";
+		mesh1 = createMarkPoint("mesh111",0,10);
         scene.add( mesh1 );
 		targetList.push(mesh1);
 
-		var geodw1= new THREE.PlaneGeometry( 60 , 80, 1, 1 );
-		var texture12 = THREE.ImageUtils.loadTexture("textures/dw.png",null,function(t){});
-        var material2 = new THREE.MeshBasicMaterial({
-			map:texture12,
-			transparent:true
-		});
-		
-		mesh2 = new THREE.Mesh( geodw1,material2 );
-		mesh2.position.x = -500;
-		mesh2.position.y = 400;
-		mesh2.name="mesh222";
-        scene.add( mesh2 );
+		mesh2 = createMarkPoint("mesh222",-500,400);
+		scene.add( mesh2 );
 		targetList.push(mesh2);
         //
         window.addEventListener( 'resize', onWindowResize, false );
@@ -91,6 +74,21 @@
 		document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 		requestAnimationFrame(draw);
     }
+    //创建标志点
+    function createMarkPoint (name,x,y) {
+		var geo = new THREE.PlaneGeometry( 60 , 80, 1, 1 );
+		var t = THREE.ImageUtils.loadTexture("textures/dw.png",null,function(t){});
+        var material1 = new THREE.MeshBasicMaterial({
+			map:t,
+			transparent:true
+		});
+        var m = new THREE.Mesh( geo,material1 );
+		m.position.x = x;
+		m.position.y = y;
+		m.name=name;
+		return m;
+    }
+
 	function onDocumentMouseMove( event ){
 		mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 		mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;	
@@ -158,7 +156,6 @@
 			mesh2.position.y = 400;
 		}		
 		
-		
 		renderer.render(scene, camera);
 		requestAnimationFrame(draw);
 	}
@@ -175,15 +172,14 @@
 		// calculate objects intersecting the picking ray
 		var intersects = raycaster.intersectObjects( targetList );
 
-		var i=0;
 		if(intersects.length>0){
-			for ( i = 0; i < intersects.length; i++ ) {
+			for (int i = 0; i < intersects.length; i++ ) {
 				//alert(intersects[i].object.name);
 				intersects[i].object.material.color.set( 0xff0000 );
 				$("#"+intersects[i].object.name).show();
 			}
 		}else{
-			for ( i = 0; i < targetList.length; i++ ) {
+			for (int i = 0; i < targetList.length; i++ ) {
 				//alert(intersects[ 0 ].object.name);
 				targetList[i].material.color.set( 0xffffff );
 				$("#"+targetList[i].name).hide();
@@ -200,9 +196,10 @@
 	<div class="bubble" id= "mesh111">三星堆古遗址位于四川省广汉市西北的鸭子河南岸，分布面积12平方千米，距今已有5000至3000年历史，是迄今在西南地区发现的范围最大、延续时间最长、文化内涵最丰富的古城
 	</div>
 	<div class="bubble" id="introduce">
-	<div class="title">三星堆博物馆</div>
-	<img src ="textures/close.png" id="close"/>
-<hr />	三星堆古遗址位于四川省广汉市西北的鸭子河南岸，分布面积12平方千米，距今已有5000至3000年历史，是迄今在西南地区发现的范围最大、延续时间最长、文化内涵最丰富的古城、古国、古蜀文化遗址。现有保存最完整的东、西、南城墙和月亮湾内城墙。三星堆遗址被称为20世纪人类最伟大的考古发现之一，昭示了长江流域与黄河流域一样，同属中华文明的母体，被誉为“长江文明之源”。
+		<div class="title">三星堆博物馆</div>
+		<img src ="textures/close.png" id="close"/>
+		<hr />	三星堆古遗址位于四川省广汉市西北的鸭子河南岸，分布面积12平方千米，距今已有5000至3000年历史，是迄今在西南地区发现的范围最大、延续时间最长、文化内涵最丰富的古城、古国、古蜀文化遗址。现有保存最完整的东、西、南城墙和月亮湾内城墙。三星堆遗址被称为20世纪人类最伟大的考古发现之一，昭示了长江流域与黄河流域一样，同属中华文明的母体，被誉为“长江文明之源”。
 	</div>
+	<div id="intro-simple">博物馆简介&lt;&lt;</div>
 </body>
 </html>

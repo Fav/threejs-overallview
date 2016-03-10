@@ -4,95 +4,7 @@
 		<title>three.js webgl - equirectangular panorama demo</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<style>
-			body {
-				background-color: #000000;
-				margin: 0px;
-				overflow: hidden;
-			}
-
-			#info {
-				position: absolute;
-				top: 0px; width: 100%;
-				color: #ffffff;
-				padding: 5px;
-				font-family:Monospace;
-				font-size:13px;
-				font-weight: bold;
-				text-align:center;
-			}
-
-			a {
-				color: #ffffff;
-			}
-			.navigate{
-				position: absolute;
-				bottom: 0px; width: 100%;height:300px;
-			}
-			.navigate #places{
-				width:100%;
-				height:200px;
-				background:rgba(64, 64, 64, 0.5);
-			}
-			.navigate #places img{
-				margin-top:36px;
-				width:256px;
-				height:128px;
-			}
-			.location{
-				cursor:pointer;
-				position:absolute;
-				top:15px;
-				left:15px;
-				color:white;
-				background:rgba(64, 64, 64, 0.5);
-			}
-			.location *{
-				vertical-align:middle;
-			}
-			.navigate #tools{
-				cursor:arrow;
-				margin: 20px auto;
-				width:300px;
-			}
-			.navigate #tools img{
-				margin:0 4px;
-				cursor:pointer;
-			}
-			.navigate #toolPanel{
-				position:absolute;
-				top:200px;
-				left:0;
-				width:100%;
-			}
-			#mapcontain{
-				width:210px;
-				height:180px;
-				position:absolute;
-				right:0;
-				top:0;
-				background:rgba(64, 64, 64, 0.2);
-			}
-			#mapcontain div{
-				background:rgba(16, 16, 16, 0.2);
-				width:100%;
-				height:24px;
-			}
-			#mapcontain div img{
-				float:right;
-			}
-			#mapcontain div img,#showMap img{
-				width:24px;
-				height:24px;
-				cursor:pointer;
-			}
-			#showMap{
-				position:absolute;
-				right:0;
-				top:0;
-				display:none;
-			}
-		</style>
+		<link rel="stylesheet" type="text/css" href="css/style.css">
 	</head>
 	<body>
 		<div class="location">
@@ -113,8 +25,9 @@
 	
 		<div class = "navigate">
 			<div id="places">
-				<img src='textures/2294472375_24a3b8ef46_o.jpg'></img>
-				<img src='textures/2294472375_24a3b8ef46_o-1.jpg'></img>
+				<img src='textures/FARO_Scan_041.jpg'></img>
+				<img src='textures/FARO_Scan_042.jpg'></img>
+				<img src='textures/FARO_Scan_043.jpg'></img>
 			</div>
 			<div id = "toolPanel">
 			<div id="tools" >
@@ -133,7 +46,6 @@
 		<script src="js/jquery/jquery-1.12.1.js"></script>
 
 		<script>
-
 			var camera, scene, renderer;
 			var mesh1,mouse = { x: 10000, y: 10000 };;
 			var targetList = [];
@@ -158,7 +70,7 @@
 				
 				//首页点击事件
 				$(".location").click(function(){
-					window.location.href='full.html';
+					window.location.href='index.html';
 				});
 				
 				$(".navigate #tools img").click(function(){
@@ -240,21 +152,16 @@
 
 				container = document.getElementById( 'container' );
 
-	
 				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
 				camera.target = new THREE.Vector3( 0, 0, 0 );
 
 				scene = new THREE.Scene();
-
 				geometry = new THREE.SphereGeometry( 500, 60, 40 );
 				geometry.scale( -1, 1, 1 );
-
 				var material = new THREE.MeshBasicMaterial( {
 					map: new THREE.TextureLoader().load( url )
 				} );
-
 				mesh = new THREE.Mesh( geometry, material );
-//mesh.position.set(500,500,500);
 				scene.add( mesh );
 				
 				//添加定位
@@ -402,13 +309,6 @@
 			function animate() {
 				step +=0.2;
 				mesh1.position.y = -125 + 5*Math.sin(step)
-				/*
-				mesh1.position.y -= 0.3;
-		
-				if (mesh1.position.y <= -135) {
-					mesh1.position.y = -125;
-				}
-				*/
 				requestAnimationFrame( animate );
 				update();
 			}
@@ -416,9 +316,7 @@
 			function update() {
 /*
 				if ( isUserInteracting === false ) {
-
 					lon += 0.1;
-
 				}
 */
 				lat = Math.max( - 85, Math.min( 85, lat ) );
@@ -430,12 +328,6 @@
 				camera.target.z = 500 * Math.sin( phi ) * Math.sin( theta );
 
 				camera.lookAt( camera.target );
-
-				/*
-				// distortion
-				camera.position.copy( camera.target ).negate();
-				*/
-
 				renderer.render( scene, camera );
 			}
 
